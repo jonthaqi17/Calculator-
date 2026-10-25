@@ -44,7 +44,6 @@
             overflow: hidden;
         }
 
-        /* Shprehja kryesore */
         .expression {
             font-size: 3.2rem;
             color: #333;
@@ -56,7 +55,6 @@
             word-break: break-all;
         }
 
-        /* Rezultati paraprak */
         .result {
             font-size: 1.8rem;
             color: #b0b0b0;
@@ -65,7 +63,7 @@
             font-weight: 300;
         }
 
-        /* Rreshti i ikonave (Historiku, Fshirja) */
+        /* Rreshti i ikonave */
         .top-icons {
             display: flex;
             justify-content: space-between;
@@ -82,9 +80,8 @@
             user-select: none;
         }
 
-        /* Butoni i fshirjes (Backspace) */
         .backspace-btn {
-            color: #4caf50; /* Ngjyrë e gjelbër si në Android */
+            color: #4caf50;
             font-size: 1.4rem;
             font-weight: bold;
             cursor: pointer;
@@ -126,15 +123,8 @@
             transform: scale(0.92);
         }
 
-        /* Ngjyrat specifike */
-        .text-red {
-            color: #e57373;
-        }
-
-        .text-green {
-            color: #388e3c;
-            font-weight: 500;
-        }
+        .text-red { color: #e57373; }
+        .text-green { color: #388e3c; font-weight: 500; }
 
         .btn.equals {
             background-color: #4caf50;
@@ -143,25 +133,19 @@
         }
 
         @media (hover: hover) {
-            .btn:hover {
-                background-color: #ebebeb;
-            }
-            .btn.equals:hover {
-                background-color: #43a047;
-            }
+            .btn:hover { background-color: #ebebeb; }
+            .btn.equals:hover { background-color: #43a047; }
         }
     </style>
 </head>
 <body>
 
     <div class="calculator">
-        <!-- Ekrani -->
         <div class="display-container">
             <div class="expression" id="expression"></div>
             <div class="result" id="result"></div>
         </div>
 
-        <!-- Butoni i ri i Fshirjes (Backspace) -->
         <div class="top-icons">
             <span>⏱</span>
             <span>📏</span>
@@ -169,7 +153,6 @@
             <span class="backspace-btn" onclick="backspace()">⌫</span>
         </div>
 
-        <!-- Butonat -->
         <div class="buttons">
             <button class="btn text-red" onclick="clearDisplay()">C</button>
             <button class="btn text-green" onclick="appendChar('(')">( )</button>
@@ -204,14 +187,10 @@
         const expressionDisplay = document.getElementById('expression');
         const resultDisplay = document.getElementById('result');
 
-        // Funksioni për të shfaqur shprehjen
         function updateDisplay() {
-            let displayStr = currentExpression
-                .replace(/\*/g, '×')
-                .replace(/\//g, '÷');
+            let displayStr = currentExpression.replace(/\*/g, '×').replace(/\//g, '÷');
             expressionDisplay.innerText = displayStr;
             
-            // Llogaritja në kohë reale
             try {
                 if (currentExpression === '') {
                     resultDisplay.innerText = '';
@@ -233,7 +212,6 @@
             } catch (e) {}
         }
 
-        // Shton numra ose operatorë
         function appendChar(char) {
             const operators = ['+', '-', '*', '/', '%'];
             if (operators.includes(char) && operators.includes(currentExpression.slice(-1))) {
@@ -251,7 +229,6 @@
             updateDisplay();
         }
 
-        // Funksioni i ri për Fshirjen e një numri (Backspace)
         function backspace() {
             if (currentExpression === '') return;
             currentExpression = currentExpression.slice(0, -1);
@@ -259,17 +236,14 @@
             if(currentExpression === '') resultDisplay.innerText = '';
         }
 
-        // Pastron gjithçka (Butoni C)
         function clearDisplay() {
             currentExpression = '';
             expressionDisplay.innerText = '';
             resultDisplay.innerText = '';
         }
 
-        // Ndryshon shenjën (+/-)
         function toggleSign() {
             if (currentExpression === '') return;
-            
             let match = currentExpression.match(/(\d+\.?\d*)$/);
             if (match) {
                 let numStr = match[0];
@@ -285,7 +259,6 @@
             }
         }
 
-        // Barazimi (Butoni =)
         function calculate() {
             if (!currentExpression) return;
 
@@ -314,19 +287,23 @@
             }
         }
 
-        // Algoritmi i llogaritjes matematikore
+        // ===== ALGORITMI I RI I LLOGARITJES ME PËRQINDJE =====
         function solveMath(expr) {
+            // Zgjidhim kllapat e brendshme
             while (expr.includes('(')) {
                 expr = expr.replace(/\(([^()]+)\)/g, function(match, inner) {
                     return solveBasicMath(inner);
                 });
             }
+            // Zgjidhim pjesën tjetër
             return solveBasicMath(expr);
         }
 
         function solveBasicMath(expr) {
+            // Ndryshojmë shenjën kur kemi diçka si "5*-2"
             expr = expr.replace(/([\+\-\*\/])-/g, '$1 -'); 
             
+            // Marrim numrat dhe operatorët (përfshirë %)
             let tokens = expr.match(/(\d+\.?\d*|[\+\-\*\/\%])/g);
             if (!tokens) return 0;
 
@@ -334,20 +311,40 @@
                 if (!isNaN(tokens[i])) tokens[i] = parseFloat(tokens[i]);
             }
 
+            // Hapi 1: Zgjidhim Përqindjen (%)
             for (let i = 0; i < tokens.length; i++) {
-                if (tokens[i] === '*' || tokens[i] === '/' || tokens[i] === '%') {
+                if (tokens[i] === '%') {
+                    let numBefore = tokens[i - 1];
+                    let prevOp = tokens[i - 2];
+                    
+                    let percentValue = numBefore / 100;
+                    
+                    // Nëse ka operator para (psh. 200 + 10%), llogarisim përqindjen e numrit paraardhës
+                    if (i >= 3 && (prevOp === '+' || prevOp === '-')) {
+                        let baseNumber = tokens[i - 3];
+                        percentValue = baseNumber * (numBefore / 100);
+                    }
+                    
+                    tokens.splice(i - 1, 2, percentValue);
+                    i--;
+                }
+            }
+
+            // Hapi 2: Shumëzimi dhe Pjesëtimi
+            for (let i = 0; i < tokens.length; i++) {
+                if (tokens[i] === '*' || tokens[i] === '/') {
                     let left = tokens[i - 1];
                     let right = tokens[i + 1];
                     let res = 0;
                     if (tokens[i] === '*') res = left * right;
                     if (tokens[i] === '/') res = left / right;
-                    if (tokens[i] === '%') res = left % right;
                     
                     tokens.splice(i - 1, 3, res); 
                     i--; 
                 }
             }
 
+            // Hapi 3: Mbledhja dhe Zbritja
             let finalResult = tokens[0];
             for (let i = 1; i < tokens.length; i += 2) {
                 let op = tokens[i];
