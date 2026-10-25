@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kalkulator Samsung Style</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #0a0a0a;
+      background: radial-gradient(circle at 20% 30%, #1e1e2f, #0a0a0a 70%);
+      padding: 16px;
+    }
+
+    .calculator {
+      width: 100%;
+      max-width: 400px;
+      background: #1c1c1e;
+      border-radius: 40px;
+      padding: 20px 16px 24px;
+      box-shadow: 
+        0 30px 50px rgba(0, 0, 0, 0.7),
+        0 0 0 2px rgba(255, 255, 255, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
+      transition: transform 0.2s ease;
+    }
+
+    /* Display area (Samsung style) */
+    .display {
+      background: #0d0d0d;
+      border-radius: 28px;
+      padding: 24px 20px 16px;
+      margin-bottom: 24px;
+      box-shadow: 
+        inset 0 2px 12px rgba(0, 0, 0, 0.8),
+        0 1px 0 rgba(255, 255, 255, 0.05);
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-end;
+      word-break: break-all;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* History (what you're calculating) */
+    .history {
+      color: #8e8e93;
+      font-size: 1.1rem;
+      font-weight: 300;
+      letter-spacing: 0.5px;
+      width: 100%;
+      text-align: right;
+      min-height: 28px;
+      margin-bottom: 6px;
+      opacity: 0.8;
+      font-family: 'Segoe UI', monospace;
+      white-space: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .history::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Main result/input */
+    .result {
+      color: #ffffff;
+      font-size: 3.2rem;
+      font-weight: 400;
+      line-height: 1.2;
+      width: 100%;
+      text-align: right;
+      white-space: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      font-family: 'Segoe UI', 'Roboto', sans-serif;
+      letter-spacing: 1px;
+    }
+    .result::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Buttons grid */
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      padding: 0 6px;
+    }
+
+    button {
+      border: none;
+      outline: none;
+      background: #2c2c2e;
+      color: #ffffff;
+      font-size: 1.8rem;
+      font-weight: 400;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Ripple effect (Samsung-ish) */
+    button::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(255,255,255,0.3) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.2s;
+      border-radius: 50%;
+    }
+
+    button:active::after {
+      opacity: 1;
+    }
+
+    button:active {
+      transform: scale(0.94);
+      background: #3a3a3c;
+    }
+
+    /* Operators (orange Samsung style) */
+    .operator {
+      background: #ff9f0a;
+      color: #ffffff;
+      font-weight: 500;
+      box-shadow: 
+        0 4px 10px rgba(255, 159, 10, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    .operator:active {
+      background: #ffb340;
+    }
+
+    /* Special buttons (AC, +/-, %) */
+    .special {
+      background: #3a3a3c;
+      color: #ffffff;
+      font-weight: 450;
+    }
+
+    .special:active {
+      background: #505052;
+    }
+
+    /* Zero button (double width) */
+    .zero {
+      grid-column: span 2;
+      aspect-ratio: auto;
+      border-radius: 100px;
+      justify-content: flex-start;
+      padding-left: 30px;
+      font-size: 1.9rem;
+    }
+
+    /* Equal button (orange) */
+    .equal {
+      background: #ff9f0a;
+      color: #ffffff;
+      font-weight: 500;
+      box-shadow: 
+        0 4px 12px rgba(255, 159, 10, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    .equal:active {
+      background: #ffb340;
+    }
+
+    /* Make everything look polished on small screens */
+    @media (max-width: 400px) {
+      .calculator {
+        padding: 16px 12px 20px;
+        border-radius: 32px;
+      }
+      .display {
+        padding: 20px 16px 12px;
+        min-height: 120px;
+        border-radius: 24px;
+      }
+      .result {
+        font-size: 2.6rem;
+      }
+      .history {
+        font-size: 1rem;
+      }
+      button {
+        font-size: 1.5rem;
+      }
+      .zero {
+        padding-left: 24px;
+        font-size: 1.6rem;
+      }
+      .buttons {
+        gap: 8px;
+      }
+    }
+
+    @media (max-width: 340px) {
+      .result {
+        font-size: 2.2rem;
+      }
+      button {
+        font-size: 1.3rem;
+      }
+    }
+
+    /* Subtle animation on load */
+    .calculator {
+      animation: fadeInUp 0.5s cubic-bezier(0.2, 0.9, 0.3, 1);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.96);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <!-- Display: history (calculation) + result -->
+    <div class="display">
+      <div class="history" id="history">0</div>
+      <div class="result" id="result">0</div>
+    </div>
+
+    <!-- Buttons grid -->
+    <div class="buttons">
+      <button class="special" data-value="AC">AC</button>
+      <button class="special" data-value="DEL">⌫</button>
+      <button class="special" data-value="%">%</button>
+      <button class="operator" data-value="÷">÷</button>
+
+      <button data-value="7">7</button>
+      <button data-value="8">8</button>
+      <button data-value="9">9</button>
+      <button class="operator" data-value="×">×</button>
+
+      <button data-value="4">4</button>
+      <button data-value="5">5</button>
+      <button data-value="6">6</button>
+      <button class="operator" data-value="−">−</button>
+
+      <button data-value="1">1</button>
+      <button data-value="2">2</button>
+      <button data-value="3">3</button>
+      <button class="operator" data-value="+">+</button>
+
+      <button class="zero" data-value="0">0</button>
+      <button data-value=".">.</button>
+      <button class="equal" data-value="=">=</button>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // ----- STATE -----
+      let currentInput = '0';        // what's shown in result (main number)
+      let previousInput = '';        // stored number for operation
+      let operator = null;           // pending operator
+      let shouldResetInput = false;  // when next digit should replace current
+      let historyText = '0';         // what's shown in history (calculation string)
+
+      // DOM elements
+      const resultEl = document.getElementById('result');
+      const historyEl = document.getElementById('history');
+
+      // ----- HELPER: update both displays -----
+      function updateDisplay() {
+        // Format main result: avoid trailing .0 and huge decimals
+        let displayValue = currentInput;
+        // If it ends with .0 and has decimal, remove .0 (only for display? Actually keep for accuracy)
+        // but we'll display as-is except we trim trailing zeros after decimal for nicer look? 
+        // For simplicity, show exactly as stored, but limit decimal length to avoid overflow.
+        // Better: use a formatted version only for display.
+        if (displayValue.includes('.')) {
+          // remove trailing zeros but keep at least one decimal if needed
+          displayValue = displayValue.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+        }
+        resultEl.textContent = displayValue;
+
+        // History: if we have an operator, show "previousInput operator"
+        if (operator !== null && previousInput !== '') {
+          // If we just pressed operator, show e.g. "5 +"
+          if (shouldResetInput) {
+            historyText = `${previousInput} ${operator}`;
+          } else {
+            // We're typing second number: show "5 + 3"
+            historyText = `${previousInput} ${operator} ${currentInput}`;
+          }
+        } else {
+          // No operator: history shows just currentInput (or '0')
+          historyText = currentInput;
+        }
+        historyEl.textContent = historyText;
+      }
+
+      // ----- CORE FUNCTIONS -----
+      function clearAll() {
+        currentInput = '0';
+        previousInput = '';
+        operator = null;
+        shouldResetInput = false;
+        historyText = '0';
+        updateDisplay();
+      }
+
+      function deleteLast() {
+        // If we are in "result just shown" state or after operator, delete should reset?
+        if (shouldResetInput) {
+          // If we just had an operator and press delete, clear operator? 
+          // Samsung behavior: delete after operator clears operator and goes back to previous
+          if (operator !== null && previousInput !== '') {
+            // Revert to previous number
+            currentInput = previousInput;
+            operator = null;
+            previousInput = '';
+            shouldResetInput = false;
+            updateDisplay();
+            return;
+          }
+          // If result just computed (shouldResetInput true but no operator), 
+          // just reset current to '0'
+          if (operator === null) {
+            currentInput = '0';
+            shouldResetInput = false;
+            updateDisplay();
+            return;
+          }
+        }
+        // Normal delete: remove last char
+        if (currentInput.length > 1) {
+          currentInput = currentInput.slice(0, -1);
+        } else {
+          currentInput = '0';
+        }
+        // If currentInput becomes empty or just '-', set to '0'
+        if (currentInput === '' || currentInput === '-') currentInput = '0';
+        updateDisplay();
+      }
+
+      function appendNumber(num) {
+        // If we're in "should reset" state, start fresh
+        if (shouldResetInput) {
+          currentInput = num;
+          shouldResetInput = false;
+          // If there's a pending operator, keep it, else clear operator (shouldn't happen)
+        } else {
+          // Avoid multiple leading zeros
+          if (currentInput === '0' && num !== '.') {
+            currentInput = num;
+          } else {
+            currentInput += num;
+          }
+        }
+        updateDisplay();
+      }
+
+      function appendDecimal() {
+        if (shouldResetInput) {
+          currentInput = '0.';
+          shouldResetInput = false;
+          updateDisplay();
+          return;
+        }
+        // Only add if not already containing decimal
+        if (!currentInput.includes('.')) {
+          currentInput += '.';
+        }
+        updateDisplay();
+      }
+
+      // Compute result based on previousInput, operator, currentInput
+      function compute() {
+        const prev = parseFloat(previousInput);
+        const curr = parseFloat(currentInput);
+        if (isNaN(prev) || isNaN(curr)) return;
+        let result = 0;
+        switch (operator) {
+          case '+': result = prev + curr; break;
+          case '−': result = prev - curr; break;
+          case '×': result = prev * curr; break;
+          case '÷': 
+            if (curr === 0) {
+              // Error state: show "Error" but keep internal? We'll set to 0? Better show "Error" but 
+              // we can't continue. We'll set currentInput to "Error" and reset state.
+              currentInput = 'Error';
+              operator = null;
+              previousInput = '';
+              shouldResetInput = true;
+              updateDisplay();
+              return;
+            }
+            result = prev / curr; 
+            break;
+          default: return;
+        }
+        // Round to avoid floating point mess (up to 12 decimals, then trim)
+        result = Math.round(result * 1e12) / 1e12;
+        // Convert to string, remove trailing .0
+        currentInput = result.toString();
+        // If it's an integer, no decimal point
+        if (currentInput.includes('.')) {
+          currentInput = currentInput.replace(/\.?0+$/, '');
+        }
+        // Reset operator and previous
+        operator = null;
+        previousInput = '';
+        shouldResetInput = true;
+        updateDisplay();
+      }
+
+      function handleOperator(op) {
+        // If currentInput is "Error", reset everything first
+        if (currentInput === 'Error') {
+          clearAll();
+          // after clear, currentInput is '0'
+        }
+
+        // If we already have an operator and user presses another, compute first if needed
+        if (operator !== null && !shouldResetInput) {
+          // compute using currentInput
+          compute();
+          // after compute, currentInput has result, operator is null, shouldResetInput = true
+        }
+
+        // Now set operator
+        if (operator === null) {
+          // store current as previous
+          previousInput = currentInput;
+          operator = op;
+          shouldResetInput = true; // next digit will replace current
+        } else {
+          // This case can happen if we just computed and shouldResetInput is true but operator is null
+          // or after pressing operator twice? Let's set previousInput = currentInput
+          previousInput = currentInput;
+          operator = op;
+          shouldResetInput = true;
+        }
+        updateDisplay();
+      }
+
+      function handlePercent() {
+        // Convert current input to percent (divide by 100)
+        // If there's a pending operation, Samsung often does: X + Y% => X + (X * Y/100)
+        // But simpler: just divide current input by 100.
+        // We'll implement standard: currentInput = currentInput / 100
+        // Unless we want contextual percent. Let's do simple: divide current number by 100.
+        const curr = parseFloat(currentInput);
+        if (!isNaN(curr)) {
+          currentInput = (curr / 100).toString();
+          // Clean up
+          if (currentInput.includes('.')) {
+            currentInput = currentInput.replace(/\.?0+$/, '');
+          }
+        }
+        shouldResetInput = false; // so you can continue editing
+        updateDisplay();
+      }
+
+      function handleEqual() {
+        if (operator === null) {
+          // No operator, just keep current
+          return;
+        }
+        // If currentInput is empty (shouldn't happen) use previous
+        if (currentInput === '' || currentInput === 'Error') return;
+        compute();
+      }
+
+      // ----- EVENT LISTENERS -----
+      document.querySelector('.buttons').addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        const value = btn.dataset.value;
+
+        // If currentInput is "Error" and user presses anything except AC, reset first
+        if (currentInput === 'Error' && value !== 'AC') {
+          clearAll();
+        }
+
+        // Handle digits and decimal
+        if (value >= '0' && value <= '9') {
+          appendNumber(value);
+          return;
+        }
+        if (value === '.') {
+          appendDecimal();
+          return;
+        }
+
+        // Handle special buttons
+        switch (value) {
+          case 'AC':
+            clearAll();
+            break;
+          case 'DEL':
+            deleteLast();
+            break;
+          case '%':
+            handlePercent();
+            break;
+          case '=':
+            handleEqual();
+            break;
+          case '+':
+          case '−':
+          case '×':
+          case '÷':
+            handleOperator(value);
+            break;
+          default:
+            break;
+        }
+      });
+
+      // Keyboard support (bonus)
+      window.addEventListener('keydown', (e) => {
+        const key = e.key;
+        if (key >= '0' && key <= '9') {
+          e.preventDefault();
+          appendNumber(key);
+        } else if (key === '.') {
+          e.preventDefault();
+          appendDecimal();
+        } else if (key === '+' || key === '-' || key === '*' || key === '/') {
+          e.preventDefault();
+          let op = key;
+          if (key === '*') op = '×';
+          if (key === '/') op = '÷';
+          if (key === '-') op = '−';
+          handleOperator(op);
+        } else if (key === 'Enter' || key === '=') {
+          e.preventDefault();
+          handleEqual();
+        } else if (key === 'Backspace') {
+          e.preventDefault();
+          deleteLast();
+        } else if (key === 'Escape') {
+          e.preventDefault();
+          clearAll();
+        } else if (key === '%') {
+          e.preventDefault();
+          handlePercent();
+        }
+      });
+
+      // Initialize display
+      updateDisplay();
+    })();
+  </script>
+</body>
+</html>
