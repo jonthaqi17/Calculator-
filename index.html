@@ -44,7 +44,7 @@
             overflow: hidden;
         }
 
-        /* Shprehja kryesore (Numrat e mëdhenj) */
+        /* Shprehja kryesore */
         .expression {
             font-size: 3.2rem;
             color: #333;
@@ -56,7 +56,7 @@
             word-break: break-all;
         }
 
-        /* Rezultati paraprak (Numri gri poshtë) */
+        /* Rezultati paraprak */
         .result {
             font-size: 1.8rem;
             color: #b0b0b0;
@@ -65,12 +65,44 @@
             font-weight: 300;
         }
 
+        /* Rreshti i ikonave (Historiku, Fshirja) */
+        .top-icons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 10px 15px 10px;
+            border-bottom: 1px solid #f0f0f0;
+            margin-bottom: 15px;
+            color: #777;
+        }
+
+        .top-icons span {
+            font-size: 1.2rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* Butoni i fshirjes (Backspace) */
+        .backspace-btn {
+            color: #4caf50; /* Ngjyrë e gjelbër si në Android */
+            font-size: 1.4rem;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+
+        .backspace-btn:active {
+            background-color: #e0e0e0;
+        }
+
         /* Rrjeta e butonave */
         .buttons {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 15px;
-            padding-top: 20px;
+            padding-top: 10px;
             padding-bottom: 20px;
         }
 
@@ -129,6 +161,14 @@
             <div class="result" id="result"></div>
         </div>
 
+        <!-- Butoni i ri i Fshirjes (Backspace) -->
+        <div class="top-icons">
+            <span>⏱</span>
+            <span>📏</span>
+            <span>🧮</span>
+            <span class="backspace-btn" onclick="backspace()">⌫</span>
+        </div>
+
         <!-- Butonat -->
         <div class="buttons">
             <button class="btn text-red" onclick="clearDisplay()">C</button>
@@ -164,14 +204,14 @@
         const expressionDisplay = document.getElementById('expression');
         const resultDisplay = document.getElementById('result');
 
-        // Funksion për të shfaqur shprehjen
+        // Funksioni për të shfaqur shprehjen
         function updateDisplay() {
             let displayStr = currentExpression
                 .replace(/\*/g, '×')
                 .replace(/\//g, '÷');
             expressionDisplay.innerText = displayStr;
             
-            // Llogaritja në kohë reale (parapamja poshtë)
+            // Llogaritja në kohë reale
             try {
                 if (currentExpression === '') {
                     resultDisplay.innerText = '';
@@ -190,14 +230,11 @@
                         resultDisplay.innerText = result;
                     }
                 }
-            } catch (e) {
-                // Nëse shprehja nuk është e plotë, mos shfaq gabim, thjesht prit
-            }
+            } catch (e) {}
         }
 
         // Shton numra ose operatorë
         function appendChar(char) {
-            // Nëse shtypim operator pas një operatori, e zëvendësojmë
             const operators = ['+', '-', '*', '/', '%'];
             if (operators.includes(char) && operators.includes(currentExpression.slice(-1))) {
                 currentExpression = currentExpression.slice(0, -1) + char;
@@ -205,7 +242,6 @@
                 return;
             }
 
-            // Parandalon dy pika dhjetore në të njëjtin numër
             if (char === '.') {
                 let lastNum = currentExpression.split(/[\+\-\*\/\%\(\)]/).pop();
                 if (lastNum.includes('.')) return;
@@ -213,6 +249,14 @@
 
             currentExpression += char;
             updateDisplay();
+        }
+
+        // Funksioni i ri për Fshirjen e një numri (Backspace)
+        function backspace() {
+            if (currentExpression === '') return;
+            currentExpression = currentExpression.slice(0, -1);
+            updateDisplay();
+            if(currentExpression === '') resultDisplay.innerText = '';
         }
 
         // Pastron gjithçka (Butoni C)
@@ -246,14 +290,12 @@
             if (!currentExpression) return;
 
             try {
-                // Mbyllim kllapat e mbetura hapur
                 let openParen = (currentExpression.match(/\(/g) || []).length;
                 let closeParen = (currentExpression.match(/\)/g) || []).length;
                 for(let i=0; i < (openParen - closeParen); i++) {
                     currentExpression += ')';
                 }
 
-                // Heqim operatorët e mbetur në fund
                 currentExpression = currentExpression.replace(/[\+\-\*\/\.]+$/, '');
 
                 let result = solveMath(currentExpression);
@@ -262,12 +304,8 @@
                     result = Math.round(result * 1000000000) / 1000000000;
                 }
 
-                // Saktësisht si Android:
-                // Rezultati gri (poshtë) bëhet shprehja kryesore (lart)
                 expressionDisplay.innerText = result.toString();
                 resultDisplay.innerText = ''; 
-                
-                // E ruajmë rezultatin që të vazhdojmë llogaritjet e reja
                 currentExpression = result.toString(); 
                 
             } catch (error) {
